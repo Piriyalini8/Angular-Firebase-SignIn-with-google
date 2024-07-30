@@ -451,6 +451,13 @@
       </svg>
     </a>
   </div>
+  <div *ngIf="user; else signInTemplate">
+    <p>Welcome, {{ user.displayName }}!</p>
+    <button (click)="signOut()">Sign Out</button>
+  </div>
+  <ng-template #signInTemplate>
+    <button (click)="signInWithGoogle()">Sign In with Google</button>
+  </ng-template>
 
   <!-- Footer -->
   <footer>
