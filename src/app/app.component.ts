@@ -1,7 +1,7 @@
 // src/app/app.component.ts
 import { Component } from '@angular/core';
-import { auth, provider, signInWithPopup, signOut } from './firebase-config';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { getGoogleToken } from './firebase-config';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -9,32 +9,39 @@ import { User, onAuthStateChanged } from 'firebase/auth';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'app1';
-  user: User | null = null;
+  title='App1';
+  user: any = null;
 
-  constructor() {
-    onAuthStateChanged(auth, (user) => {
-      this.user = user;
-    });
+  constructor(private http: HttpClient) {}
+
+  async signInWithGoogle() {
+    try {
+      const token = await getGoogleToken();
+      if (token) {
+        console.log('Google token: ' + token);
+        this.http.post<{ customToken: string }>('http://localhost:8080/api/users/google', { token })
+          .subscribe({
+            next: (response) => {
+              // Use the custom token to authenticate with Firebase
+              this.signInWithCustomToken(response.customToken);
+            },
+            error: (error) => {
+              console.error('Backend error:', error);
+            }
+          });
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+    }
   }
 
-  signInWithGoogle() {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        console.log('User signed in:', result.user);
-      })
-      .catch((error) => {
-        console.error('Sign in error:', error);
-      });
+  signInWithCustomToken(customToken: string) {
+    console.log('custom token: '+customToken);
+    // Logic to sign in with custom token
+    // This part would be specific to your authentication needs
   }
 
-  signOut() {
-    signOut(auth)
-      .then(() => {
-        console.log('User signed out');
-      })
-      .catch((error) => {
-        console.error('Sign out error:', error);
-      });
+  signOut(){
+    console.log('User signed out');
   }
 }
